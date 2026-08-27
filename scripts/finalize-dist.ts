@@ -11,15 +11,15 @@ const BINDGEN_DTS = "whatsapp_rust_bridge.d.ts";
 
 copyFileSync(join(ROOT, "pkg", BINDGEN_DTS), join(ROOT, "dist", BINDGEN_DTS));
 
-const indexDts = join(ROOT, "dist", "index.d.ts");
-const source = readFileSync(indexDts, "utf8");
+const apiDts = join(ROOT, "dist", "api.d.ts");
+const source = readFileSync(apiDts, "utf8");
 const rewritten = source.replaceAll(
   "../pkg/whatsapp_rust_bridge.js",
   "./whatsapp_rust_bridge.js",
 );
 if (rewritten === source) {
   throw new Error(
-    "dist/index.d.ts no longer references ../pkg/whatsapp_rust_bridge.js — update finalize-dist.ts",
+    "dist/api.d.ts no longer references ../pkg/whatsapp_rust_bridge.js — update finalize-dist.ts",
   );
 }
-writeFileSync(indexDts, rewritten);
+writeFileSync(apiDts, rewritten);

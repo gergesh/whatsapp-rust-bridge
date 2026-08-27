@@ -2,14 +2,14 @@ import {
   BinaryReader as BaseBinaryReader,
   BinaryWriter as BaseBinaryWriter,
 } from "@bufbuild/protobuf/wire";
-import { Buffer } from "node:buffer";
 
 const PROTO_WORD_BITS = 32;
 const PROTO_WORD_BASE = 2 ** PROTO_WORD_BITS;
 const PROTO_VARINT_DATA_BITS = 7;
 const PROTO_VARINT_CONTINUATION_BIT = 1 << PROTO_VARINT_DATA_BITS;
 const PROTO_VARINT_DATA_MASK = PROTO_VARINT_CONTINUATION_BIT - 1;
-const UTF8_ENCODING = "utf8";
+const UTF8_DECODER = new TextDecoder();
+const UTF8_ENCODER = new TextEncoder();
 const REPLACEMENT_CHARACTER = "\uFFFD";
 const SURROGATE_MIN = 0xd800;
 const HIGH_SURROGATE_MAX = 0xdbff;
@@ -312,14 +312,8 @@ export class BinaryWriter extends BaseBinaryWriter {
  * Buf's public BigInt/string behavior for direct users.
  */
 export class BinaryReader extends BaseBinaryReader {
-  protected readonly utf8Buffer: Buffer;
-
   constructor(buf: Uint8Array) {
     super(buf);
-    // Buffer.from(ArrayBuffer, offset, length) is a view, not a copy. Keeping
-    // one per reader lets every ordinary string decode use byte offsets
-    // directly instead of allocating a temporary Uint8Array subarray.
-    this.utf8Buffer = Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength);
   }
 
   /**
@@ -334,7 +328,7 @@ export class BinaryReader extends BaseBinaryReader {
     const start = this.pos;
     this.pos += byteLength;
     this.assertBounds();
-    return this.utf8Buffer.toString(UTF8_ENCODING, start, this.pos);
+    return UTF8_DECODER.decode(this.buf.subarray(start, this.pos));
   }
 
   override bool(): boolean {
@@ -421,7 +415,7 @@ export class InvalidUtf8CountingReader extends BinaryReader {
     const start = this.pos;
     this.pos += byteLength;
     this.assertBounds();
-    const text = this.utf8Buffer.toString(UTF8_ENCODING, start, this.pos);
+    const text = UTF8_DECODER.decode(this.buf.subarray(start, this.pos));
     if (text.includes(REPLACEMENT_CHARACTER) && !this.decodedExactly(text, start, this.pos)) {
       this.invalidUtf8Fields++;
     }
@@ -430,7 +424,11 @@ export class InvalidUtf8CountingReader extends BinaryReader {
 
   /** A U+FFFD the peer actually sent re-encodes to the bytes it arrived as; a substituted one does not. */
   private decodedExactly(text: string, start: number, end: number): boolean {
-    const reencoded = Buffer.from(text, UTF8_ENCODING);
-    return this.utf8Buffer.compare(reencoded, 0, reencoded.length, start, end) === 0;
+    const reencoded = UTF8_ENCODER.encode(text);
+    if (reencoded.length !== end - start) return false;
+    for (let index = 0; index < reencoded.length; index++) {
+      if (reencoded[index] !== this.buf[start + index]) return false;
+    }
+    return true;
   }
 }

@@ -17,6 +17,27 @@ High-performance WhatsApp utilities powered by Rust and WebAssembly.
 | Image (thumbnails, conversion) | ✅     |
 | Sticker Metadata               | ✅     |
 
+## Browser
+
+Bundlers that honor the package's `browser` export condition load the WASM
+as a web asset, without Node.js filesystem or buffer shims. The browser entry
+finishes instantiating the module before its exports become available, so the
+public API stays the same in Node.js and the browser:
+
+```ts
+import {
+  createWhatsAppClient,
+  initWasmEngine,
+} from "@oxidezap/whatsapp-rust-bridge";
+
+initWasmEngine();
+const client = await createWhatsAppClient(transport, httpClient, onEvent, store);
+```
+
+Vite and other modern ESM bundlers emit `whatsapp_rust_bridge_bg.wasm`
+automatically from the package URL. A server that handles the built files
+directly must serve the emitted WASM asset as `application/wasm`.
+
 ## Preview builds
 
 Every commit CI builds and tests — on `main` and on every pull request — then
