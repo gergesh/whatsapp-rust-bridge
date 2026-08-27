@@ -1,0 +1,9 @@
+export { default } from "./whatsapp_rust_bridge.js";
+export * from "./whatsapp_rust_bridge.js";
+export { encodeProto, decodeProto, decodeProtoBatch, UnpairedSurrogateError, type ProtoDecodeReport, } from "./proto";
+export { BinaryReader, InvalidUtf8CountingReader, longToBigInt, type Int64, type Long, } from "./proto-reader";
+export { decodeEventWireEnvelope, decodeMessageWireBatch, decodeReceiptWireBatch, decodeServerAckWireBatch, encodeEventWireEnvelope, encodeMessageWireBatch, encodeReceiptWireBatch, encodeServerAckWireBatch, EVENT_SEGMENT_KIND_MESSAGE, EVENT_SEGMENT_KIND_RECEIPT, EVENT_SEGMENT_KIND_SERVER_ACK, MESSAGE_WIRE_INFO_RECORD_WIDTH, type EventWireSegment, type MessageWireBatchView, type MessageWireEntry, type MessageWireInfo, type PackedWireBatch, type ReceiptWireData, type ServerAckWireData, type WireJid, } from "./wire-info";
+export { proto } from "./proto-namespace";
+import type { WhatsAppEventHandler, JsTransportCallbacks, JsHttpClientConfig, JsStoreCallbacks, CacheConfig, WasmWhatsAppClient } from "./whatsapp_rust_bridge.js";
+export declare const initWasmEngine: (logger?: any, crypto?: any) => void;
+export declare const createWhatsAppClient: (transport: JsTransportCallbacks, httpClient: JsHttpClientConfig, onEvent?: WhatsAppEventHandler | null, store?: JsStoreCallbacks | null, cache?: CacheConfig | null, version?: readonly [number, number, number] | null, wantedPreKeyCount?: number | null) => Promise<WasmWhatsAppClient>;
